@@ -1,6 +1,8 @@
 {
   "name": "skyline/html-render",
+  "description": "Extension to skyline/render which prepares more routings, extended renders for specially html css and js rendering",
   "license": "MIT",
+  "minimum-stability": "dev",
   "authors": [
     {
       "name": "Thomas Abplanalp",
