@@ -11,7 +11,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "TASoft\\" : "src"
+      "Skyline\\HTMLRender\\" : "src"
     }
   },
   "require" : {
@@ -19,6 +19,7 @@
     "skyline/render": "dev-master"
   },
   "require-dev": {
-    "phpunit/phpunit": "^6"
+    "phpunit/phpunit": "^6",
+    "skyline/compiler": "dev-master"
   }
 }
