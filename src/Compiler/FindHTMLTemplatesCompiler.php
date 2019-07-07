@@ -45,9 +45,9 @@ class FindHTMLTemplatesCompiler extends FindTemplatesCompiler
                 case 11: // .view.phtml
                     return new ViewFileLoader($sourceFile);
                 default:
-                    return new PhtmlFileLoader($sourceFile);
             }
         }
+        return new PhtmlFileLoader($sourceFile);
     }
 
     /**

@@ -39,16 +39,15 @@ class PhtmlFileLoader extends TemplateFileLoader
      */
     protected function loadIntoMutable(MutableTemplate $template): void
     {
+        $name = explode(".", basename( $this->getFilename()) , 2)[0];
+        $template->setName($name);
+
         $tokens = token_get_all( file_get_contents($this->getFilename()) );
         foreach($tokens as $token) {
             if(is_array($token) && $token[0] ?? T_DOC_COMMENT) {
                 if($this->parseDocComment($token[1], $template))
                     break;
             }
-        }
-        if(!$template->getName()) {
-            $name = explode(".", basename( $this->getFilename()) , 2)[0];
-            $template->setName($name);
         }
     }
 
