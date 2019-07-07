@@ -21,44 +21,20 @@
  * SOFTWARE.
  */
 
-namespace Skyline\HTMLRender\Layout;
+use Skyline\Render\CompiledRender;
+use Skyline\Render\Plugin\CaptureContentsPlugin;
+use Skyline\Render\Plugin\RenderTemplateDefaultDispatchPlugin;
 
-
-use Skyline\Render\Template\Extension\ExtendableAwareTemplateInterface;
-use Skyline\Render\Template\Extension\TemplateExtensionTrait;
-use Skyline\Render\Template\FileTemplate;
-use Skyline\Render\Template\Nested\NestableTemplateInterface;
-use Skyline\Render\Template\Nested\TemplateNestingTrait;
-
-/**
- * The abstrat layout defines
- * @package TASoft\DI\Layout
- */
-abstract class AbstractLayout extends FileTemplate implements ExtendableAwareTemplateInterface, NestableTemplateInterface
-{
-    use TemplateExtensionTrait;
-    use TemplateNestingTrait;
-
-    /**
-     * @inheritDoc
-     */
-    public function getRenderable(): callable
-    {
-        $FILE = $this->getFilename();
-        return function(?LayoutVariableList $list) use ($FILE) {
-            foreach ($list as $key => $value) {
-                $$key = $value;
-            }
-            unset($list);
-            require $FILE;
-        };
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getOptionalExtensionIdentifiers(): array
-    {
-        return [];
-    }
-}
+return [
+    'html-render' => [
+        CompiledRender::CONFIG_RENDER_CLASS => CompiledRender::class,
+        CompiledRender::CONFIG_PLUGINS => [
+            [
+                CompiledRender::CONFIG_PLUGIN_CLASS => CaptureContentsPlugin::class,
+            ],
+            [
+                CompiledRender::CONFIG_PLUGIN_CLASS => RenderTemplateDefaultDispatchPlugin::class
+            ]
+        ]
+    ]
+];

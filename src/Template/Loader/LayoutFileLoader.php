@@ -21,45 +21,17 @@
  * SOFTWARE.
  */
 
-namespace Skyline\HTMLRender\Compiler;
+namespace Skyline\HTMLRender\Template\Loader;
 
-use Skyline\Compiler\Context\Code\SourceFile;
-use Skyline\HTMLRender\Template\Loader\LayoutFileLoader;
-use Skyline\Render\Compiler\FindTemplatesCompiler;
+
 use Skyline\Render\Compiler\Template\MutableTemplate;
-use Skyline\Render\Template\Loader\LoaderInterface;
 
-class FindHTMLTemplatesCompiler extends FindTemplatesCompiler
+class LayoutFileLoader extends PhtmlFileLoader
 {
-    /**
-     * @inheritDoc
-     */
-    protected function getLoaderForFile(SourceFile $sourceFile): LoaderInterface
+    protected function parseDocComment(string $docComment, MutableTemplate $template): bool
     {
-        if(preg_match($this->getTemplateFilenamePattern(), $sourceFile, $ms)) {
-            switch (strlen($ms[1])) {
-                case 13: // .layout.phtml
-                    return new LayoutFileLoader($sourceFile);
-                default:
-            }
-        }
-        return parent::getLoaderForFile($sourceFile);
+        $template->setCatalogName("Layout");
+        return parent::parseDocComment($docComment, $template);
     }
 
-    /**
-     * @inheritDoc
-     */
-    protected function adjustLoadedTemplate(MutableTemplate $template, SourceFile $sourceFile): MutableTemplate
-    {
-
-        return parent::adjustLoadedTemplate($template, $sourceFile);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    protected function getTemplateFilenamePattern(): string
-    {
-        return "/\.layout\.phtml|\.view\.phtml|\.phtml$/i";
-    }
 }

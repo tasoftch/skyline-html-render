@@ -21,45 +21,53 @@
  * SOFTWARE.
  */
 
-namespace Skyline\HTMLRender\Compiler;
+namespace Skyline\HTMLRender\Layout;
 
-use Skyline\Compiler\Context\Code\SourceFile;
-use Skyline\HTMLRender\Template\Loader\LayoutFileLoader;
-use Skyline\Render\Compiler\FindTemplatesCompiler;
-use Skyline\Render\Compiler\Template\MutableTemplate;
-use Skyline\Render\Template\Loader\LoaderInterface;
 
-class FindHTMLTemplatesCompiler extends FindTemplatesCompiler
+use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
+use Skyline\Render\Template\Extension\ExtendableAwareTemplateInterface;
+use Skyline\Render\Template\Extension\TemplateExtensionTrait;
+use Skyline\Render\Template\FileTemplate;
+use Skyline\Render\Template\Nested\NestableTemplateInterface;
+use Skyline\Render\Template\Nested\TemplateNestingTrait;
+
+/**
+ * The abstrat layout defines
+ * @package Skyline\HTMLRender
+ */
+class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, NestableTemplateInterface
 {
+    use TemplateExtensionTrait;
+    use TemplateNestingTrait;
+
     /**
      * @inheritDoc
      */
-    protected function getLoaderForFile(SourceFile $sourceFile): LoaderInterface
+    public function getRenderable(): callable
     {
-        if(preg_match($this->getTemplateFilenamePattern(), $sourceFile, $ms)) {
-            switch (strlen($ms[1])) {
-                case 13: // .layout.phtml
-                    return new LayoutFileLoader($sourceFile);
-                default:
+        $FILE = $this->getFilename();
+        return function(?LayoutVariableList $list) use ($FILE) {
+            foreach ($list as $key => $value) {
+                $$key = $value;
             }
-        }
-        return parent::getLoaderForFile($sourceFile);
+            unset($list);
+            require $FILE;
+        };
     }
 
     /**
      * @inheritDoc
      */
-    protected function adjustLoadedTemplate(MutableTemplate $template, SourceFile $sourceFile): MutableTemplate
+    public function getRequiredExtensionIdentifiers(): array
     {
-
-        return parent::adjustLoadedTemplate($template, $sourceFile);
+        return $this->getAttribute( PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS );
     }
 
     /**
      * @inheritDoc
      */
-    protected function getTemplateFilenamePattern(): string
+    public function getOptionalExtensionIdentifiers(): array
     {
-        return "/\.layout\.phtml|\.view\.phtml|\.phtml$/i";
+        return $this->getAttribute( PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS );
     }
 }
