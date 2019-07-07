@@ -24,6 +24,7 @@
 namespace Skyline\HTMLRender\Template\Loader;
 
 
+use Skyline\HTMLRender\View\View;
 use Skyline\Render\Compiler\Template\MutableTemplate;
 
 class ViewFileLoader extends PhtmlFileLoader
@@ -31,6 +32,7 @@ class ViewFileLoader extends PhtmlFileLoader
     protected function parseDocComment(string $docComment, MutableTemplate $template): bool
     {
         $template->setCatalogName("View");
+        $template->setTemplateClassName( View::class );
         return parent::parseDocComment($docComment, $template);
     }
 }

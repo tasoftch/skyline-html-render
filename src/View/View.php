@@ -21,19 +21,11 @@
  * SOFTWARE.
  */
 
-namespace Skyline\HTMLRender\Template\Loader;
+namespace Skyline\HTMLRender\View;
 
 
 use Skyline\HTMLRender\Layout\Layout;
-use Skyline\Render\Compiler\Template\MutableTemplate;
 
-class LayoutFileLoader extends PhtmlFileLoader
+class View extends Layout
 {
-    protected function parseDocComment(string $docComment, MutableTemplate $template): bool
-    {
-        $template->setCatalogName("Layout");
-        $template->setTemplateClassName( Layout::class );
-        return parent::parseDocComment($docComment, $template);
-    }
-
 }
