@@ -47,10 +47,12 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
     {
         $FILE = $this->getFilename();
         return function(?LayoutVariableList $list) use ($FILE) {
-            foreach ($list as $key => $value) {
-                $$key = $value;
+            if($list) {
+                foreach ($list as $key => $value) {
+                    $$key = $value;
+                }
+                unset($list);
             }
-            unset($list);
             require $FILE;
         };
     }
