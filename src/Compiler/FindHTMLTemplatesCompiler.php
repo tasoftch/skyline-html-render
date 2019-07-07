@@ -39,7 +39,7 @@ class FindHTMLTemplatesCompiler extends FindTemplatesCompiler
     protected function getLoaderForFile(SourceFile $sourceFile): LoaderInterface
     {
         if(preg_match($this->getTemplateFilenamePattern(), $sourceFile, $ms)) {
-            switch (strlen($ms[1])) {
+            switch (strlen($ms[0])) {
                 case 13: // .layout.phtml
                     return new LayoutFileLoader($sourceFile);
                 case 11: // .view.phtml
