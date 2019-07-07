@@ -25,6 +25,8 @@ namespace Skyline\HTMLRender\Compiler;
 
 use Skyline\Compiler\Context\Code\SourceFile;
 use Skyline\HTMLRender\Template\Loader\LayoutFileLoader;
+use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
+use Skyline\HTMLRender\Template\Loader\ViewFileLoader;
 use Skyline\Render\Compiler\FindTemplatesCompiler;
 use Skyline\Render\Compiler\Template\MutableTemplate;
 use Skyline\Render\Template\Loader\LoaderInterface;
@@ -40,10 +42,12 @@ class FindHTMLTemplatesCompiler extends FindTemplatesCompiler
             switch (strlen($ms[1])) {
                 case 13: // .layout.phtml
                     return new LayoutFileLoader($sourceFile);
+                case 11: // .view.phtml
+                    return new ViewFileLoader($sourceFile);
                 default:
+                    return new PhtmlFileLoader($sourceFile);
             }
         }
-        return parent::getLoaderForFile($sourceFile);
     }
 
     /**
