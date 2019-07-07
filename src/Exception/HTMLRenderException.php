@@ -21,23 +21,29 @@
  * SOFTWARE.
  */
 
-namespace Skyline\HTMLRender\Component;
+namespace Skyline\HTMLRender\Exception;
 
 
-use Skyline\Render\Template\Extension\TemplateExtensionInterface;
-use Skyline\Render\Template\Nested\AbstractNestableTemplate;
+use Skyline\Render\Exception\RenderException;
 
-abstract class AbstractComponent extends AbstractNestableTemplate implements TemplateExtensionInterface
+class HTMLRenderException extends RenderException
 {
-    public function getType(): string
+    /** @var string */
+    private $subTemplateName;
+
+    /**
+     * @return string
+     */
+    public function getSubTemplateName(): string
     {
-        // TODO: Implement getType() method.
+        return $this->subTemplateName;
     }
 
-    public function getPosition(): int
+    /**
+     * @param string $subTemplateName
+     */
+    public function setSubTemplateName(string $subTemplateName): void
     {
-        // TODO: Implement getPosition() method.
+        $this->subTemplateName = $subTemplateName;
     }
-
-
 }
