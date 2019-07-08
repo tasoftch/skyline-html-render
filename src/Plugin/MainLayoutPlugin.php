@@ -39,16 +39,21 @@ class MainLayoutPlugin implements RenderPluginInterface
 {
     public function initialize(EventManagerInterface $eventManager)
     {
-        $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "collectHTMLComponents"], 90);
         $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "resolveTemplateAwareChildren"], 80);
-
+        $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "collectHTMLComponents"], 90);
         $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "openPage"], 95);
+
+        $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "openBody"], 10000);
+
+
         $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_FOOTER_RENDER, [$this, "closePage"], 100);
     }
 
     public function tearDown()
     {
     }
+
+
 
     public function openPage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
         ?><!DOCTYPE html>
@@ -58,9 +63,14 @@ class MainLayoutPlugin implements RenderPluginInterface
         <?php
     }
 
+    public function openBody(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
+        ?></head>
+    <body><?php
+    }
+
     public function closePage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
         ?>
-    </head>
+    </body>
 </html><?php
     }
 
