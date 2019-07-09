@@ -31,7 +31,7 @@ use Skyline\Render\Info\RenderInfoInterface;
 use Skyline\Render\Plugin\RenderPluginInterface;
 use Skyline\Render\Plugin\RenderTemplateDispatchPlugin;
 use Skyline\Render\Template\AdvancedTemplateInterface;
-use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
+use Skyline\Render\Template\Extension\ExtendableTemplateInterface;use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
 use Skyline\Render\Template\Nested\NestableTemplateInterface;
 use TASoft\EventManager\EventManagerInterface;
 
@@ -101,32 +101,35 @@ class MainLayoutPlugin implements RenderPluginInterface
     public function collectHTMLComponents(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments)
     {
         $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
-
-        $iterateOverAttributes = function($template, $attributeName) use (&$iterateOverAttributes) {
-            if($template instanceof AdvancedTemplateInterface) {
-                if($template instanceof NestableTemplateInterface) {
-                    foreach($template->getNestedTemplates() as $temp) {
-                        yield from $iterateOverAttributes($temp, $attributeName);
+        if($template instanceof ExtendableTemplateInterface) {
+            $iterateOverAttributes = function($template, $attributeName) use (&$iterateOverAttributes) {
+                if($template instanceof AdvancedTemplateInterface) {
+                    if($template instanceof NestableTemplateInterface) {
+                        foreach($template->getNestedTemplates() as $temp) {
+                            yield from $iterateOverAttributes($temp, $attributeName);
+                        }
                     }
+
+                    $attr = $template->getAttribute( $attributeName );
+                    if($attr)
+                        yield $attr;
                 }
+            };
 
-                $attr = $template->getAttribute( $attributeName );
-                if($attr)
-                    yield $attr;
+            $title = NULL;
+            $description = NULL;
+            foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_TITLE) as $title)
+                break;
+            foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_DESCRIPTION) as $description)
+                break;
+            $required = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS) );
+            $optional = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS) );
+
+            if($required = array_unique($required)) {
+                foreach($required as $req) {
+                    var_dump($req);
+                }
             }
-        };
-
-        $title = NULL;
-        $description = NULL;
-        foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_TITLE) as $title)
-            break;
-        foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_DESCRIPTION) as $description)
-            break;
-        $required = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS) );
-        $optional = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS) );
-
-        if($required = array_unique($required)) {
-
         }
     }
 }
