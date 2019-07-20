@@ -24,14 +24,22 @@
 namespace Skyline\HTMLRender\Plugin;
 
 
-use Skyline\HTMLRender\Exception\ComponentNotFoundException;use Skyline\HTMLRender\Exception\HTMLRenderException;
-use Skyline\HTMLRender\HTMLRenderController;use Skyline\HTMLRender\Layout\Layout;use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
-use Skyline\Kernel\Service\SkylineServiceManager;use Skyline\Render\Event\InternRenderEvent;
+use Skyline\HTML\Head\Description;
+use Skyline\HTML\Head\Title;
+use Skyline\HTMLRender\Exception\ComponentNotFoundException;
+use Skyline\HTMLRender\Exception\HTMLRenderException;
+use Skyline\HTMLRender\HTMLRenderController;
+use Skyline\HTMLRender\Layout\Layout;
+use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
+use Skyline\Kernel\Service\SkylineServiceManager;
+use Skyline\Render\Event\InternRenderEvent;
 use Skyline\Render\Info\RenderInfoInterface;
 use Skyline\Render\Plugin\RenderPluginInterface;
 use Skyline\Render\Plugin\RenderTemplateDispatchPlugin;
 use Skyline\Render\Template\AdvancedTemplateInterface;
-use Skyline\Render\Template\Extension\ExtendableTemplateInterface;use Skyline\Render\Template\Extension\TemplateExtensionInterface;use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
+use Skyline\Render\Template\Extension\ExtendableTemplateInterface;
+use Skyline\Render\Template\Extension\TemplateExtensionInterface;
+use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
 use Skyline\Render\Template\Nested\NestableTemplateInterface;
 use TASoft\EventManager\EventManagerInterface;
 
@@ -124,10 +132,15 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
 
         $rc = SkylineServiceManager::getServiceManager()->get("renderController");
         if($rc instanceof HTMLRenderController) {
-            foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_TITLE) as $title)
+            foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_TITLE) as $title) {
+                $template->registerExtension(new Title($title), 'title');
                 break;
-            foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_DESCRIPTION) as $description)
+            }
+            foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_DESCRIPTION) as $description) {
+                $template->registerExtension(new Description($description), 'description');
                 break;
+            }
+
             $required = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS) );
             $optional = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS) );
 
