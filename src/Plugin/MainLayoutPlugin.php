@@ -156,7 +156,7 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
             }
 
             if($optional = array_unique($optional)) {
-                foreach($required as $req) {
+                foreach($optional as $req) {
                     try {
                         $elements = $rc->getComponentElements( $req );
                         foreach ($elements as $key => $element) {
