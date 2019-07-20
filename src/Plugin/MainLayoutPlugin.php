@@ -24,100 +24,106 @@
 namespace Skyline\HTMLRender\Plugin;
 
 
-use Skyline\HTMLRender\Exception\HTMLRenderException;
-use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
-use Skyline\Render\Event\InternRenderEvent;
+use Skyline\HTMLRender\Exception\ComponentNotFoundException;use Skyline\HTMLRender\Exception\HTMLRenderException;
+use Skyline\HTMLRender\HTMLRenderController;use Skyline\HTMLRender\Layout\Layout;use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
+use Skyline\Kernel\Service\SkylineServiceManager;use Skyline\Render\Event\InternRenderEvent;
 use Skyline\Render\Info\RenderInfoInterface;
 use Skyline\Render\Plugin\RenderPluginInterface;
 use Skyline\Render\Plugin\RenderTemplateDispatchPlugin;
 use Skyline\Render\Template\AdvancedTemplateInterface;
-use Skyline\Render\Template\Extension\ExtendableTemplateInterface;use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
+use Skyline\Render\Template\Extension\ExtendableTemplateInterface;use Skyline\Render\Template\Extension\TemplateExtensionInterface;use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
 use Skyline\Render\Template\Nested\NestableTemplateInterface;
 use TASoft\EventManager\EventManagerInterface;
 
 class MainLayoutPlugin implements RenderPluginInterface
 {
-    public function initialize(EventManagerInterface $eventManager)
-    {
-        $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "resolveTemplateAwareChildren"], 80);
-        $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "collectHTMLComponents"], 90);
-        $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "openPage"], 95);
+public function initialize(EventManagerInterface $eventManager)
+{
+    $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "resolveTemplateAwareChildren"], 80);
+    $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "collectHTMLComponents"], 90);
+    $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "openPage"], 95);
 
-        $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "openBody"], 10000);
-
-
-        $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_FOOTER_RENDER, [$this, "closePage"], 100);
-    }
-
-    public function tearDown()
-    {
-    }
+    $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_HEADER_RENDER, [$this, "openBody"], 10000);
 
 
+    $eventManager->addListener(RenderTemplateDispatchPlugin::EVENT_FOOTER_RENDER, [$this, "closePage"], 100);
+}
 
-    public function openPage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
-        ?><!DOCTYPE html>
+public function tearDown()
+{
+}
+
+
+
+public function openPage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
+?><!DOCTYPE html>
 <html lang="">
-    <head>
-        <meta name="generator" content="Skyline CMS by TASoft Applications" />
-        <?php
+<head>
+    <meta name="generator" content="Skyline CMS by TASoft Applications" />
+    <?php
     }
 
     public function openBody(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
-        ?></head>
-    <body><?php
-    }
+    ?></head>
+<body><?php
+}
 
-    public function closePage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
-        ?>
-    </body>
+public function closePage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
+?>
+</body>
 </html><?php
-    }
+}
 
-    public function resolveTemplateAwareChildren(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
-        $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
-        $children = $event->getInfo()->get(RenderInfoInterface::INFO_SUB_TEMPLATES);
+public function resolveTemplateAwareChildren(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
+    $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
+    $children = $event->getInfo()->get(RenderInfoInterface::INFO_SUB_TEMPLATES);
 
-        if($template instanceof NestableAwareTemplateInterface) {
-            foreach($template->getRequiredIdentifiers() as $id) {
-                $child = $children[$id] ?? NULL;
-                if(!$child) {
-                    $e = new HTMLRenderException("Required subtemplate missing");
-                    $e->setSubTemplateName( $id );
-                    throw $e;
-                }
-                $template->registerTemplate($child, $id);
+    if($template instanceof NestableAwareTemplateInterface) {
+        foreach($template->getRequiredIdentifiers() as $id) {
+            $child = $children[$id] ?? NULL;
+            if(!$child) {
+                $e = new HTMLRenderException("Required subtemplate missing");
+                $e->setSubTemplateName( $id );
+                throw $e;
             }
+            $template->registerTemplate($child, $id);
+        }
 
-            foreach($template->getOptionalIdentifiers() as $id) {
-                $child = $children[$id] ?? NULL;
-                if($child) {
-                    $template->registerTemplate($child, $id);
-                }
+        foreach($template->getOptionalIdentifiers() as $id) {
+            $child = $children[$id] ?? NULL;
+            if($child) {
+                $template->registerTemplate($child, $id);
             }
         }
     }
+}
 
-    public function collectHTMLComponents(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments)
-    {
-        $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
-        if($template instanceof ExtendableTemplateInterface) {
-            $iterateOverAttributes = function($template, $attributeName) use (&$iterateOverAttributes) {
-                if($template instanceof AdvancedTemplateInterface) {
-                    if($template instanceof NestableTemplateInterface) {
-                        foreach($template->getNestedTemplates() as $temp) {
-                            yield from $iterateOverAttributes($temp, $attributeName);
-                        }
+public function collectHTMLComponents(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments)
+{
+    $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
+    if($template instanceof ExtendableTemplateInterface) {
+        $iterateOverAttributes = function($template, $attributeName) use (&$iterateOverAttributes) {
+            if($template instanceof AdvancedTemplateInterface) {
+                if($template instanceof NestableTemplateInterface) {
+                    foreach($template->getNestedTemplates() as $temp) {
+                        yield from $iterateOverAttributes($temp, $attributeName);
                     }
-
-                    $attr = $template->getAttribute( $attributeName );
-                    if($attr)
-                        yield $attr;
                 }
-            };
 
-            $title = NULL;
-            $description = NULL;
+                $attr = $template->getAttribute( $attributeName );
+                if(is_array($attr)) {
+                    foreach($attr as $a)
+                        yield $a;
+                } elseif($attr)
+                    yield $attr;
+            }
+        };
+
+        $title = NULL;
+        $description = NULL;
+
+        $rc = SkylineServiceManager::getServiceManager()->get("renderController");
+        if($rc instanceof HTMLRenderController) {
             foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_TITLE) as $title)
                 break;
             foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_DESCRIPTION) as $description)
@@ -127,9 +133,34 @@ class MainLayoutPlugin implements RenderPluginInterface
 
             if($required = array_unique($required)) {
                 foreach($required as $req) {
-                    var_dump($req);
+                    $elements = $rc->getComponentElements( $req );
+                    if(!$elements) {
+                        $e = new ComponentNotFoundException("Component $req not found");
+                        $e->setComponentName($req);
+                        throw $e;
+                    }
+                    foreach ($elements as $key => $element) {
+                        if($element instanceof TemplateExtensionInterface) {
+                            $template->registerExtension($element, "$req.$key");
+                        }
+                    }
                 }
             }
+
+            if($optional = array_unique($optional)) {
+                foreach($required as $req) {
+                    $elements = $rc->getComponentElements( $req );
+                    foreach ($elements as $key => $element) {
+                        if($element instanceof TemplateExtensionInterface) {
+                            $template->registerExtension($element, "$req.$key");
+                        }
+                    }
+                }
+            }
+
+            if($template instanceof Layout)
+                $template->setDidLoadExtensions(true);
         }
     }
+}
 }

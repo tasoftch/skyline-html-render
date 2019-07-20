@@ -24,11 +24,15 @@
 namespace Skyline\HTMLRender;
 
 
+use Skyline\Component\Config\AbstractComponent;
+use Skyline\HTMLRender\Exception\ComponentNotFoundException;
 use Skyline\Render\Service\CompiledRenderController;
+use TASoft\Service\ServiceManager;
 
 class HTMLRenderController extends CompiledRenderController
 {
     private $compiledComponentsFilename;
+    private $compiledComponentsInfo;
 
     public function __construct($compiledRenderFilename, $compiledComponentsFilename)
     {
@@ -42,5 +46,45 @@ class HTMLRenderController extends CompiledRenderController
     public function getCompiledComponentsFilename()
     {
         return $this->compiledComponentsFilename;
+    }
+
+    /**
+     * Returns the required component's html elements
+     *
+     * @param string $identifier
+     * @return array
+     * @throws ComponentNotFoundException
+     */
+    public function getComponentElements(string $identifier): array {
+        if(NULL === $this->compiledComponentsInfo) {
+            $this->compiledComponentsInfo = require getcwd() . DIRECTORY_SEPARATOR . $this->getCompiledComponentsFilename();
+        }
+
+        if($renderInfo = &$this->compiledComponentsInfo[ $identifier ] ?? NULL) {
+            $elements = [];
+
+            foreach($renderInfo as $key => &$ri) {
+                if(!isset($ri["instance"])) {
+                    $class = $ri[ AbstractComponent::COMP_ELEMENT_CLASS ];
+                    $args = $ri[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ] ?? NULL;
+
+                    if($args) {
+                        $sm = ServiceManager::generalServiceManager();
+                        $ri["instance"] = new $class(...array_values($sm->mapArray($args)));
+                        unset($ri[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ]);
+                    } else {
+                        $ri["instance"] = new $class();
+                    }
+                    unset($ri[ AbstractComponent::COMP_ELEMENT_CLASS ]);
+                }
+
+                $elements[$key] = $ri["instance"];
+            }
+            return $elements;
+        } else {
+            $e = new ComponentNotFoundException("Could not find desired component $identifier");
+            $e->setComponentName($identifier);
+            throw $e;
+        }
     }
 }

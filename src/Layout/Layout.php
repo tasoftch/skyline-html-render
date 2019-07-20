@@ -40,6 +40,8 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
     use TemplateExtensionTrait;
     use TemplateNestingTrait;
 
+    private $didLoadExtensions = false;
+
     /**
      * @inheritDoc
      */
@@ -62,7 +64,9 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
      */
     public function getRequiredExtensionIdentifiers(): array
     {
-        return $this->getAttribute( PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS );
+        if(!$this->didLoadExtensions)
+            return $this->getAttribute( PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS );
+        return [];
     }
 
     /**
@@ -70,6 +74,24 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
      */
     public function getOptionalExtensionIdentifiers(): array
     {
-        return $this->getAttribute( PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS );
+        if($this->didLoadExtensions)
+            return $this->getAttribute( PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS );
+        return [];
+    }
+
+    /**
+     * @return bool
+     */
+    public function didLoadExtensions(): bool
+    {
+        return $this->didLoadExtensions;
+    }
+
+    /**
+     * @param bool $didLoadExtensions
+     */
+    public function setDidLoadExtensions(bool $didLoadExtensions): void
+    {
+        $this->didLoadExtensions = $didLoadExtensions;
     }
 }
