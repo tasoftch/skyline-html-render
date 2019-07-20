@@ -65,7 +65,7 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
     public function getRequiredExtensionIdentifiers(): array
     {
         if(!$this->didLoadExtensions)
-            return $this->getAttribute( PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS );
+            return $this->getAttribute( PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS ) ?: [];
         return [];
     }
 
@@ -75,7 +75,7 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
     public function getOptionalExtensionIdentifiers(): array
     {
         if($this->didLoadExtensions)
-            return $this->getAttribute( PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS );
+            return $this->getAttribute( PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS ) ?: [];
         return [];
     }
 
