@@ -82,7 +82,7 @@ class HTMLRenderController extends CompiledRenderController
             }
             return $elements;
         } else {
-            $e = new ComponentNotFoundException("Could not find desired component $identifier");
+            $e = new ComponentNotFoundException("Could not find desired component $identifier", 4040);
             $e->setComponentName($identifier);
             throw $e;
         }

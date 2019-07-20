@@ -147,11 +147,6 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
             if($required = array_unique($required)) {
                 foreach($required as $req) {
                     $elements = $rc->getComponentElements( $req );
-                    if(!$elements) {
-                        $e = new ComponentNotFoundException("Component $req not found");
-                        $e->setComponentName($req);
-                        throw $e;
-                    }
                     foreach ($elements as $key => $element) {
                         if($element instanceof TemplateExtensionInterface) {
                             $template->registerExtension($element, "$req.$key");
@@ -162,11 +157,14 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
 
             if($optional = array_unique($optional)) {
                 foreach($required as $req) {
-                    $elements = $rc->getComponentElements( $req );
-                    foreach ($elements as $key => $element) {
-                        if($element instanceof TemplateExtensionInterface) {
-                            $template->registerExtension($element, "$req.$key");
+                    try {
+                        $elements = $rc->getComponentElements( $req );
+                        foreach ($elements as $key => $element) {
+                            if($element instanceof TemplateExtensionInterface) {
+                                $template->registerExtension($element, "$req.$key");
+                            }
                         }
+                    } catch (ComponentNotFoundException $e) {
                     }
                 }
             }
