@@ -74,7 +74,7 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
      */
     public function getOptionalExtensionIdentifiers(): array
     {
-        if($this->didLoadExtensions)
+        if(!$this->didLoadExtensions)
             return $this->getAttribute( PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS ) ?: [];
         return [];
     }
