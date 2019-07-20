@@ -29,9 +29,15 @@ use Skyline\Render\Compiler\Template\MutableTemplate;
 
 class ViewFileLoader extends PhtmlFileLoader
 {
+    protected function loadIntoMutable(MutableTemplate $template): void
+    {
+        parent::loadIntoMutable($template);
+        if(!$template->getCatalogName())
+            $template->setCatalogName("Views");
+    }
+
     protected function parseDocComment(string $docComment, MutableTemplate $template): bool
     {
-        $template->setCatalogName("View");
         $template->setTemplateClassName( View::class );
         return parent::parseDocComment($docComment, $template);
     }

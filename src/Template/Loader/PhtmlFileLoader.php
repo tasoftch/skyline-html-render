@@ -44,10 +44,13 @@ class PhtmlFileLoader extends TemplateFileLoader
 
         $tokens = token_get_all( file_get_contents($this->getFilename()) );
         foreach($tokens as $token) {
-            if(is_array($token) && $token[0] ?? T_DOC_COMMENT) {
-                if($this->parseDocComment($token[1], $template))
+            if (is_array($token) && $token[0] ?? T_DOC_COMMENT) {
+                if ($this->parseDocComment($token[1], $template))
                     break;
             }
+        }
+        if(!$template->getCatalogName()) {
+            $template->setCatalogName( basename(dirname($template->getId())) );
         }
     }
 
