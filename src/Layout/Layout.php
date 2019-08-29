@@ -25,6 +25,10 @@ namespace Skyline\HTMLRender\Layout;
 
 
 use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
+use Skyline\Render\Context\DefaultRenderContext;
+use Skyline\Render\Context\RenderContextInterface;
+use Skyline\Render\Info\RenderInfoInterface;
+use Skyline\Render\Model\ExtractableModelInterface;
 use Skyline\Render\Template\Extension\ExtendableAwareTemplateInterface;
 use Skyline\Render\Template\Extension\TemplateExtensionTrait;
 use Skyline\Render\Template\FileTemplate;
@@ -56,6 +60,23 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
                 unset($list);
             } elseif (is_array($list))
                 extract($list);
+
+            $self = $this;
+            if($self instanceof DefaultRenderContext) {
+                if($model = $self->getRenderInfo()->get( RenderInfoInterface::INFO_MODEL )) {
+                    if($model instanceof ExtractableModelInterface) {
+                        foreach($model->getKeys() as $key) {
+                            if(!preg_match("/^[_a-z][a-z0-9_]*$/i", $key))
+                                $theKey = $model->getKeyForInvalidKey($key);
+                            else
+                                $theKey = $key;
+
+                            $$theKey = $model->getValueForKey( $key );
+                        }
+                    }
+                }
+            }
+
             require $FILE;
         };
     }
