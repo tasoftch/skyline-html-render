@@ -48,13 +48,14 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
     public function getRenderable(): callable
     {
         $FILE = $this->getFilename();
-        return function(?LayoutVariableList $list) use ($FILE) {
-            if($list) {
+        return function($list) use ($FILE) {
+            if($list instanceof LayoutVariableList) {
                 foreach ($list as $key => $value) {
                     $$key = $value;
                 }
                 unset($list);
-            }
+            } elseif (is_array($list))
+                extract($list);
             require $FILE;
         };
     }
