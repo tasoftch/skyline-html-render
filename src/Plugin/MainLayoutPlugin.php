@@ -77,101 +77,128 @@ public function openPage(string $eventName, InternRenderEvent $event, $eventMana
 }
 
 public function closePage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
-    ?>
-    </body>
-    </html><?php
-    }
+?>
+</body>
+</html><?php
+}
 
-    public function resolveTemplateAwareChildren(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
-        $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
-        $children = $event->getInfo()->get(RenderInfoInterface::INFO_SUB_TEMPLATES);
+public function resolveTemplateAwareChildren(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
+    $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
+    $children = $event->getInfo()->get(RenderInfoInterface::INFO_SUB_TEMPLATES);
 
-        if($template instanceof NestableAwareTemplateInterface) {
-            foreach($template->getRequiredIdentifiers() as $id) {
-                $child = $children[$id] ?? NULL;
-                if(!$child) {
-                    $e = new HTMLRenderException("Required subtemplate missing");
-                    $e->setSubTemplateName( $id );
-                    throw $e;
-                }
-                $template->registerTemplate($child, $id);
+    if($template instanceof NestableAwareTemplateInterface) {
+        foreach($template->getRequiredIdentifiers() as $id) {
+            $child = $children[$id] ?? NULL;
+            if(!$child) {
+                $e = new HTMLRenderException("Required subtemplate missing");
+                $e->setSubTemplateName( $id );
+                throw $e;
             }
+            $template->registerTemplate($child, $id);
+        }
 
-            foreach($template->getOptionalIdentifiers() as $id) {
-                $child = $children[$id] ?? NULL;
-                if($child) {
-                    $template->registerTemplate($child, $id);
-                }
+        foreach($template->getOptionalIdentifiers() as $id) {
+            $child = $children[$id] ?? NULL;
+            if($child) {
+                $template->registerTemplate($child, $id);
             }
         }
     }
+}
 
-    public function collectHTMLComponents(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments)
-    {
-        $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
-        if($template instanceof ExtendableTemplateInterface) {
-            $iterateOverAttributes = function($template, $attributeName) use (&$iterateOverAttributes) {
-                if($template instanceof AdvancedTemplateInterface) {
-                    if($template instanceof NestableTemplateInterface) {
-                        foreach($template->getNestedTemplates() as $temp) {
-                            yield from $iterateOverAttributes($temp, $attributeName);
-                        }
+public function collectHTMLComponents(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments)
+{
+    $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
+    if($template instanceof ExtendableTemplateInterface) {
+        $iterateOverAttributes = function($template, $attributeName) use (&$iterateOverAttributes) {
+            if($template instanceof AdvancedTemplateInterface) {
+                if($template instanceof NestableTemplateInterface) {
+                    foreach($template->getNestedTemplates() as $temp) {
+                        yield from $iterateOverAttributes($temp, $attributeName);
                     }
+                }
 
-                    $attr = $template->getAttribute( $attributeName );
-                    if(is_array($attr)) {
-                        foreach($attr as $a)
-                            yield $a;
-                    } elseif($attr)
-                        yield $attr;
+                $attr = $template->getAttribute( $attributeName );
+                if(is_array($attr)) {
+                    foreach($attr as $a)
+                        yield $a;
+                } elseif($attr)
+                    yield $attr;
+            }
+        };
+
+        $title = NULL;
+        $description = NULL;
+
+        $rc = SkylineServiceManager::getServiceManager()->get("renderController");
+        if($rc instanceof HTMLRenderController) {
+            $templateStack = $event->getInfo()->get( RenderInfoInterface::INFO_SUB_TEMPLATES );
+
+            $titleIterator = function($template) use (&$title, $iterateOverAttributes) {
+                foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_TITLE) as $t) {
+                    $title = $t;
+                    break;
                 }
             };
 
-            $title = NULL;
-            $description = NULL;
-
-            $rc = SkylineServiceManager::getServiceManager()->get("renderController");
-            if($rc instanceof HTMLRenderController) {
-                foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_TITLE) as $title) {
-                    $template->registerExtension(new Title($title), 'title');
+            $descriptionIterator = function($template) use (&$description, $iterateOverAttributes) {
+                foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_DESCRIPTION) as $t) {
+                    $description = $t;
                     break;
                 }
-                foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_DESCRIPTION) as $description) {
-                    $template->registerExtension(new Description($description), 'description');
-                    break;
+            };
+
+            foreach ($templateStack as $tpl) {
+                if(!$title)
+                    $titleIterator($tpl);
+                if(!$description)
+                    $descriptionIterator($tpl);
+            }
+
+            if(!$title) {
+                $titleIterator($template);
+            }
+            if(!$description) {
+                $descriptionIterator($template);
+            }
+
+            if($title)
+                $template->registerExtension(new Title($title), 'title');
+            if($description)
+                $template->registerExtension(new Description($description), 'description');
+
+
+            $required = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS) );
+            $optional = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS) );
+
+            if($required = array_unique($required)) {
+                foreach($required as $req) {
+                    $elements = $rc->getComponentElements( $req );
+                    foreach ($elements as $key => $element) {
+                        if($element instanceof TemplateExtensionInterface) {
+                            $template->registerExtension($element, "$req.$key");
+                        }
+                    }
                 }
+            }
 
-                $required = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS) );
-                $optional = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS) );
-
-                if($required = array_unique($required)) {
-                    foreach($required as $req) {
+            if($optional = array_unique($optional)) {
+                foreach($optional as $req) {
+                    try {
                         $elements = $rc->getComponentElements( $req );
                         foreach ($elements as $key => $element) {
                             if($element instanceof TemplateExtensionInterface) {
                                 $template->registerExtension($element, "$req.$key");
                             }
                         }
+                    } catch (ComponentNotFoundException $e) {
                     }
                 }
-
-                if($optional = array_unique($optional)) {
-                    foreach($optional as $req) {
-                        try {
-                            $elements = $rc->getComponentElements( $req );
-                            foreach ($elements as $key => $element) {
-                                if($element instanceof TemplateExtensionInterface) {
-                                    $template->registerExtension($element, "$req.$key");
-                                }
-                            }
-                        } catch (ComponentNotFoundException $e) {
-                        }
-                    }
-                }
-
-                if($template instanceof Layout)
-                    $template->setDidLoadExtensions(true);
             }
+
+            if($template instanceof Layout)
+                $template->setDidLoadExtensions(true);
         }
     }
+}
 }
