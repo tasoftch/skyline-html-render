@@ -74,8 +74,10 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
                             $$theKey = $model->getValueForKey( $key );
                         }
                     }
+                    unset($model, $theKey, $key);
                 }
             }
+            unset($self);
 
             require $FILE;
         };
