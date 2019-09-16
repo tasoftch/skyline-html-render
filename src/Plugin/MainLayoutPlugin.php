@@ -68,6 +68,7 @@ public function openPage(string $eventName, InternRenderEvent $event, $eventMana
 <html lang="">
 <head>
     <meta name="generator" content="Skyline CMS by TASoft Applications" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <?php
     }
 
