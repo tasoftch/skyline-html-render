@@ -24,6 +24,7 @@
 namespace Skyline\HTMLRender\Compiler;
 
 
+use Skyline\Component\Config\AbstractComponent;
 use TASoft\Config\Compiler\Factory\FactoryInterface;
 use TASoft\Config\Compiler\StandardFactoryCompiler;
 use TASoft\Config\Config;
@@ -32,13 +33,22 @@ class ConfigCompilerHelper extends StandardFactoryCompiler
 {
     protected function mergeConfiguration(Config $collected, Config $new)
     {
-        $iterator = function(Config $cfg) use (&$iterator) {
+        $iterator = function(Config $cfg) use (&$iterator, $collected) {
             foreach($cfg->toArray(false) as $key => $value) {
                 if($value instanceof Config)
                     $cfg[$key] = $iterator($value);
                 elseif($value instanceof FactoryInterface) {
                     $conf = $value->toConfig();
-
+                    if(isset($conf[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ]["file"])) {
+                        $file = $conf[AbstractComponent::COMP_ELEMENT_ARGUMENTS]["file"];
+                        if($tg = $conf[AbstractComponent::COMP_ELEMENT_ARGUMENTS][0] ?? NULL) {
+                            $cg = $collected["#"];
+                            if(!$cg)
+                                $collected["#"] = $cg = new Config();
+                            $cg[$tg] = $file;
+                            unset($conf[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ]["file"]);
+                        }
+                    }
                     $cfg[$key] = $iterator($conf);
                 }
             }
@@ -46,5 +56,4 @@ class ConfigCompilerHelper extends StandardFactoryCompiler
         };
         parent::mergeConfiguration($collected, $iterator($new));
     }
-
 }
