@@ -21,26 +21,22 @@
  * SOFTWARE.
  */
 
-use Skyline\Compiler\Factory\AbstractExtendedCompilerFactory;
-use Skyline\Compiler\Predef\ConfigurationCompiler;
-use Skyline\HTMLRender\Compiler\ComponentsConfigurationCompiler;
-use Skyline\HTMLRender\Compiler\FindHTMLTemplatesCompiler;
+namespace Skyline\HTMLRender\Compiler;
 
-return [
-    'components-config' => [
-        AbstractExtendedCompilerFactory::COMPILER_CLASS_KEY                            => ComponentsConfigurationCompiler::class,
-        ConfigurationCompiler::INFO_TARGET_FILENAME_KEY     => 'components.config.php',
-        ConfigurationCompiler::INFO_PATTERN_KEY             => '/^components\.cfg\.php$/i',
-        ConfigurationCompiler::INFO_CUSTOM_FILENAME_KEY     => 'components.config.php',
-        AbstractExtendedCompilerFactory::COMPILER_DEPENDENCIES_KEY => [
-            'composer-packages-order'
-        ]
-    ],
-    "find-html-templates" => [
-        AbstractExtendedCompilerFactory::COMPILER_CLASS_KEY => FindHTMLTemplatesCompiler::class,
-        AbstractExtendedCompilerFactory::COMPILER_DEPENDENCIES_KEY => [
-            'components-config',
-            "find-templates"
-        ]
-    ]
-];
+
+use Skyline\Compiler\CompilerContext;
+use Skyline\Compiler\Predef\OrderedConfigurationCompiler;
+use Traversable;
+
+class ComponentsConfigurationCompiler extends OrderedConfigurationCompiler
+{
+    protected function compileConfiguration(Traversable $source, string $target, CompilerContext $context)
+    {
+        $compiler = new ConfigCompilerHelper();
+        $compiler->setSource($source);
+
+        $compiler->setTarget($target);
+        $compiler->compile();
+    }
+
+}

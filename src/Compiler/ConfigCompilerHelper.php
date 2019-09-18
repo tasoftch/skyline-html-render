@@ -21,26 +21,30 @@
  * SOFTWARE.
  */
 
-use Skyline\Compiler\Factory\AbstractExtendedCompilerFactory;
-use Skyline\Compiler\Predef\ConfigurationCompiler;
-use Skyline\HTMLRender\Compiler\ComponentsConfigurationCompiler;
-use Skyline\HTMLRender\Compiler\FindHTMLTemplatesCompiler;
+namespace Skyline\HTMLRender\Compiler;
 
-return [
-    'components-config' => [
-        AbstractExtendedCompilerFactory::COMPILER_CLASS_KEY                            => ComponentsConfigurationCompiler::class,
-        ConfigurationCompiler::INFO_TARGET_FILENAME_KEY     => 'components.config.php',
-        ConfigurationCompiler::INFO_PATTERN_KEY             => '/^components\.cfg\.php$/i',
-        ConfigurationCompiler::INFO_CUSTOM_FILENAME_KEY     => 'components.config.php',
-        AbstractExtendedCompilerFactory::COMPILER_DEPENDENCIES_KEY => [
-            'composer-packages-order'
-        ]
-    ],
-    "find-html-templates" => [
-        AbstractExtendedCompilerFactory::COMPILER_CLASS_KEY => FindHTMLTemplatesCompiler::class,
-        AbstractExtendedCompilerFactory::COMPILER_DEPENDENCIES_KEY => [
-            'components-config',
-            "find-templates"
-        ]
-    ]
-];
+
+use TASoft\Config\Compiler\Factory\FactoryInterface;
+use TASoft\Config\Compiler\StandardFactoryCompiler;
+use TASoft\Config\Config;
+
+class ConfigCompilerHelper extends StandardFactoryCompiler
+{
+    protected function mergeConfiguration(Config $collected, Config $new)
+    {
+        $iterator = function(Config $cfg) use (&$iterator) {
+            foreach($cfg->toArray(false) as $key => $value) {
+                if($value instanceof Config)
+                    $cfg[$key] = $iterator($value);
+                elseif($value instanceof FactoryInterface) {
+                    $conf = $value->toConfig();
+
+                    $cfg[$key] = $iterator($conf);
+                }
+            }
+            return $cfg;
+        };
+        parent::mergeConfiguration($collected, $iterator($new));
+    }
+
+}
