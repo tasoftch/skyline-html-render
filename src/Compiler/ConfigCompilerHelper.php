@@ -46,12 +46,13 @@ class ConfigCompilerHelper extends StandardFactoryCompiler
                             if(!$cg)
                                 $collected["#"] = $cg = new Config();
                             $cg[$tg] = $file;
-
-                            $cc = $conf[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ];
-                            unset($cc["file"]);
-                            $conf[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ] = $cc;
                         }
                     }
+
+                    $cc = $conf[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ];
+                    unset($cc["file"]);
+                    $conf[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ] = $cc;
+
                     $cfg[$key] = $iterator($conf);
                 }
             }
