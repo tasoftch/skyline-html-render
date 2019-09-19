@@ -45,7 +45,7 @@ class ConfigCompilerHelper extends StandardFactoryCompiler
                             $cg = $collected["#"];
                             if(!$cg)
                                 $collected["#"] = $cg = new Config();
-                            $cg[$tg] = $file;
+                            $cg[strtolower($tg)] = $file;
                         }
                     }
 

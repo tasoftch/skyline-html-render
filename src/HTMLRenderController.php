@@ -94,15 +94,22 @@ class HTMLRenderController extends CompiledRenderController
     }
 
     /**
-     * returns the compiled URI to local files map
+     * Transforms an URI into a local filename if available
      *
-     * @return array|null
+     * @param string $URI
+     * @param bool $prependPublicPrefix
+     * @return string|null
      */
-    public function getURIToLocalMap(): ?array {
+    public function getMappedLocalFilename(string $URI, bool $prependPublicPrefix = true): ?string {
         if(NULL === $this->compiledComponentsInfo) {
             $this->compiledComponentsInfo = require getcwd() . DIRECTORY_SEPARATOR . $this->getCompiledComponentsFilename();
         }
-        return $this->compiledComponentsInfo["#"] ?? NULL;
+
+        if($prependPublicPrefix) {
+            $URI = preg_replace("%/+%", '/',  $this->getPublicURIPrefix() . $URI);
+        }
+
+        return $this->compiledComponentsInfo [ strtolower($URI) ] ?? NULL;
     }
 
     /**
