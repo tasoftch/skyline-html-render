@@ -21,20 +21,7 @@
  * SOFTWARE.
  */
 
-use Skyline\HTMLRender\HTMLRenderController;
-use Skyline\Kernel\Config\MainKernelConfig;
-use TASoft\Service\Config\AbstractFileConfiguration;
-
 return [
-    MainKernelConfig::CONFIG_SERVICES => [
-        "renderController" => [
-            AbstractFileConfiguration::SERVICE_CLASS => HTMLRenderController::class,
-            AbstractFileConfiguration::SERVICE_INIT_ARGUMENTS => [
-                'renderFile' => '$(C)/render.config.php',
-                'componentFile' => '$(C)/components.config.php',
-                'publicURI' => '%component.public-uri%',
-                "resourceDir" => '%component.resource-dir%'
-            ]
-        ]
-    ]
+    "component.public-uri" => "/Public",
+    "component.resource-dir" => '$(/)/Components'
 ];

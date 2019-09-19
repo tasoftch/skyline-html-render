@@ -34,10 +34,15 @@ class HTMLRenderController extends CompiledRenderController
     private $compiledComponentsFilename;
     private $compiledComponentsInfo;
 
-    public function __construct($compiledRenderFilename, $compiledComponentsFilename)
+    private $publicURIPrefix;
+    private $resourceDirectory;
+
+    public function __construct($compiledRenderFilename, $compiledComponentsFilename, $publicURIPrefix, $resourceDirectory)
     {
         parent::__construct($compiledRenderFilename);
         $this->compiledComponentsFilename = $compiledComponentsFilename;
+        $this->publicURIPrefix = $publicURIPrefix;
+        $this->resourceDirectory = $resourceDirectory;
     }
 
     /**
@@ -86,5 +91,21 @@ class HTMLRenderController extends CompiledRenderController
             $e->setComponentName($identifier);
             throw $e;
         }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPublicURIPrefix()
+    {
+        return $this->publicURIPrefix;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getResourceDirectory()
+    {
+        return $this->resourceDirectory;
     }
 }
