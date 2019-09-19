@@ -109,7 +109,7 @@ class HTMLRenderController extends CompiledRenderController
             $URI = preg_replace("%/+%", '/',  $this->getPublicURIPrefix() . $URI);
         }
 
-        return $this->compiledComponentsInfo [ strtolower($URI) ] ?? NULL;
+        return $this->compiledComponentsInfo [ "#" ] [ strtolower($URI) ] ?? NULL;
     }
 
     /**
