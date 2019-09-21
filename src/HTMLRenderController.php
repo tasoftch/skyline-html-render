@@ -69,6 +69,9 @@ class HTMLRenderController extends CompiledRenderController
             $elements = [];
 
             foreach($renderInfo as $key => &$ri) {
+                if($key == AbstractComponent::COMP_REQUIREMENTS)
+                    continue;
+
                 if(!isset($ri["instance"])) {
                     $class = $ri[ AbstractComponent::COMP_ELEMENT_CLASS ];
                     $args = $ri[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ] ?? NULL;
@@ -93,6 +96,13 @@ class HTMLRenderController extends CompiledRenderController
         }
     }
 
+    public function hasComponent(string $identifier): bool {
+        if(NULL === $this->compiledComponentsInfo) {
+            $this->compiledComponentsInfo = require getcwd() . DIRECTORY_SEPARATOR . $this->getCompiledComponentsFilename();
+        }
+        return isset($this->compiledComponentsInfo[$identifier]);
+    }
+
     /**
      * Transforms an URI into a local filename if available
      *
@@ -110,6 +120,19 @@ class HTMLRenderController extends CompiledRenderController
         }
 
         return $this->compiledComponentsInfo [ "#" ] [ strtolower($URI) ] ?? NULL;
+    }
+
+    /**
+     * If the component requires other components, use this method to determine which ones.
+     *
+     * @param string $componentName
+     * @return array|null
+     */
+    public function getRequirementsForComponent(string $componentName): ?array {
+        if(NULL === $this->compiledComponentsInfo) {
+            $this->compiledComponentsInfo = require getcwd() . DIRECTORY_SEPARATOR . $this->getCompiledComponentsFilename();
+        }
+        return $this->compiledComponentsInfo [ "@" ] [ $componentName ] ?? NULL;
     }
 
     /**

@@ -28,7 +28,7 @@ use Skyline\HTML\Head\Description;
 use Skyline\HTML\Head\Title;
 use Skyline\HTMLRender\Exception\ComponentNotFoundException;
 use Skyline\HTMLRender\Exception\HTMLRenderException;
-use Skyline\HTMLRender\HTMLRenderController;
+use Skyline\HTMLRender\Helper\ComponentResolverHelper;use Skyline\HTMLRender\HTMLRenderController;
 use Skyline\HTMLRender\Layout\Layout;
 use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
 use Skyline\Kernel\Service\SkylineServiceManager;
@@ -111,23 +111,6 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
 {
     $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
     if($template instanceof ExtendableTemplateInterface) {
-        $iterateOverAttributes = function($template, $attributeName) use (&$iterateOverAttributes) {
-            if($template instanceof AdvancedTemplateInterface) {
-                if($template instanceof NestableTemplateInterface) {
-                    foreach($template->getNestedTemplates() as $temp) {
-                        yield from $iterateOverAttributes($temp, $attributeName);
-                    }
-                }
-
-                $attr = $template->getAttribute( $attributeName );
-                if(is_array($attr)) {
-                    foreach($attr as $a)
-                        yield $a;
-                } elseif($attr)
-                    yield $attr;
-            }
-        };
-
         $title = NULL;
         $description = NULL;
 
@@ -135,15 +118,15 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
         if($rc instanceof HTMLRenderController) {
             $templateStack = $event->getInfo()->get( RenderInfoInterface::INFO_SUB_TEMPLATES );
 
-            $titleIterator = function($template) use (&$title, $iterateOverAttributes) {
-                foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_TITLE) as $t) {
+            $titleIterator = function($template) use (&$title) {
+                foreach(ComponentResolverHelper::iterateOverAttributes($template, PhtmlFileLoader::ATTR_TITLE) as $t) {
                     $title = $t;
                     break;
                 }
             };
 
-            $descriptionIterator = function($template) use (&$description, $iterateOverAttributes) {
-                foreach($iterateOverAttributes($template, PhtmlFileLoader::ATTR_DESCRIPTION) as $t) {
+            $descriptionIterator = function($template) use (&$description) {
+                foreach(ComponentResolverHelper::iterateOverAttributes($template, PhtmlFileLoader::ATTR_DESCRIPTION) as $t) {
                     $description = $t;
                     break;
                 }
@@ -169,33 +152,9 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
                 $template->registerExtension(new Description($description), 'description');
 
 
-            $required = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS) );
-            $optional = iterator_to_array( $iterateOverAttributes($template, PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS) );
+            $helper = new ComponentResolverHelper($template, $templateStack);
+            $helper->resolve();
 
-            if($required = array_unique($required)) {
-                foreach($required as $req) {
-                    $elements = $rc->getComponentElements( $req );
-                    foreach ($elements as $key => $element) {
-                        if($element instanceof TemplateExtensionInterface) {
-                            $template->registerExtension($element, "$req.$key");
-                        }
-                    }
-                }
-            }
-
-            if($optional = array_unique($optional)) {
-                foreach($optional as $req) {
-                    try {
-                        $elements = $rc->getComponentElements( $req );
-                        foreach ($elements as $key => $element) {
-                            if($element instanceof TemplateExtensionInterface) {
-                                $template->registerExtension($element, "$req.$key");
-                            }
-                        }
-                    } catch (ComponentNotFoundException $e) {
-                    }
-                }
-            }
 
             if($template instanceof Layout)
                 $template->setDidLoadExtensions(true);

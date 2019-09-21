@@ -33,10 +33,16 @@ class ConfigCompilerHelper extends StandardFactoryCompiler
 {
     protected function mergeConfiguration(Config $collected, Config $new)
     {
-        $iterator = function(Config $cfg) use (&$iterator, $collected) {
+        $iterator = function(Config $cfg, $parentKey = NULL) use (&$iterator, $collected) {
             foreach($cfg->toArray(false) as $key => $value) {
-                if($value instanceof Config)
-                    $cfg[$key] = $iterator($value);
+                if($key == AbstractComponent::COMP_REQUIREMENTS) {
+                    $cg = $collected["@"];
+                    if(!$cg)
+                        $collected["@"] = $cg = new Config();
+                    $cg[ $parentKey] = $value;
+                }
+                elseif($value instanceof Config)
+                    $cfg[$key] = $iterator($value, $key);
                 elseif($value instanceof FactoryInterface) {
                     $conf = $value->toConfig();
                     if(isset($conf[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ]["file"])) {
@@ -53,7 +59,7 @@ class ConfigCompilerHelper extends StandardFactoryCompiler
                     unset($cc["file"]);
                     $conf[ AbstractComponent::COMP_ELEMENT_ARGUMENTS ] = $cc;
 
-                    $cfg[$key] = $iterator($conf);
+                    $cfg[$key] = $iterator($conf, $key);
                 }
             }
             return $cfg;
