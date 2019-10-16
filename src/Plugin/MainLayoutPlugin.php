@@ -25,7 +25,7 @@ namespace Skyline\HTMLRender\Plugin;
 
 
 use Skyline\HTML\Head\Description;
-use Skyline\HTML\Head\Title;
+use Skyline\HTML\Head\Meta;use Skyline\HTML\Head\Title;
 use Skyline\HTMLRender\Exception\ComponentNotFoundException;
 use Skyline\HTMLRender\Exception\HTMLRenderException;
 use Skyline\HTMLRender\Helper\ComponentResolverHelper;use Skyline\HTMLRender\HTMLRenderController;
@@ -146,10 +146,15 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
                 $descriptionIterator($template);
             }
 
-            if($title)
+            if($title) {
                 $template->registerExtension(new Title($title), 'title');
-            if($description)
+                $template->registerExtension(new Meta("og:title", $title), 'og:title');
+            }
+
+            if($description) {
                 $template->registerExtension(new Description($description), 'description');
+                $template->registerExtension(new Meta("og:description", $description), 'og:description');
+            }
 
 
             $helper = new ComponentResolverHelper($template, $templateStack);
