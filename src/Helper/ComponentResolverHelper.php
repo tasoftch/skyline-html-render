@@ -32,7 +32,6 @@ use Skyline\Render\Template\Extension\ExtendableTemplateInterface;
 use Skyline\Render\Template\Extension\TemplateExtensionInterface;
 use Skyline\Render\Template\Nested\NestableTemplateInterface;
 use Skyline\Render\Template\TemplateInterface;
-use TASoft\Collection\DependencyCollection;
 use TASoft\Collection\Element\DependencyCollectonElement;
 use TASoft\Collection\Exception\DuplicatedObjectException;
 
@@ -86,8 +85,8 @@ class ComponentResolverHelper
 
             $attr = $template->getAttribute( $attributeName );
             if(is_array($attr)) {
-                foreach($attr as $a)
-                    yield $a;
+                foreach($attr as $k => $a)
+                    yield $k => $a;
             } elseif($attr)
                 yield $attr;
         }

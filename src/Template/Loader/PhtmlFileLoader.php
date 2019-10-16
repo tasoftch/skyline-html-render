@@ -34,6 +34,9 @@ class PhtmlFileLoader extends TemplateFileLoader
     const ATTR_REQUIRED_COMPONENTS = 'require';
     const ATTR_OPTIONAL_COMPONENTS = 'optional';
 
+    /** @var string Meta are specific tags for opengraph (og:title, og:icon, ...) use @meta icon ..., @meta title ... */
+    const ATTR_META = 'meta';
+
     /**
      * @inheritDoc
      */
@@ -100,6 +103,17 @@ class PhtmlFileLoader extends TemplateFileLoader
             case self::ATTR_OPTIONAL_COMPONENTS:
             case self::ATTR_REQUIRED_COMPONENTS:
                 $template->setAttribute(strtolower($annotationName), $annotationValue, true);
+                break;
+            case 'meta':
+                if(preg_match("/^\s*([a-z\-]+)\s+(.+)$/i", $annotationValue, $ms)) {
+                    $metas = $template->getAttribute( self::ATTR_META );
+                    if(!$metas)
+                        $metas = [];
+
+                    $metas[ $ms[1] ] = $ms[2];
+
+                    $template->setAttribute( self::ATTR_META , $metas);
+                }
             default:
         }
     }

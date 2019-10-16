@@ -132,11 +132,21 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
                 }
             };
 
+            $openGraph = [];
+            $ogIterator = function($template) use (&$openGraph) {
+                foreach(ComponentResolverHelper::iterateOverAttributes($template, PhtmlFileLoader::ATTR_META) as $k => $t) {
+                    $openGraph[$k] = $t;
+                }
+            };
+
+
             foreach ($templateStack as $tpl) {
                 if(!$title)
                     $titleIterator($tpl);
                 if(!$description)
                     $descriptionIterator($tpl);
+                if(!$openGraph)
+                    $ogIterator($tpl);
             }
 
             if(!$title) {
@@ -145,15 +155,34 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
             if(!$description) {
                 $descriptionIterator($template);
             }
+            if(!$openGraph) {
+                $ogIterator($template);
+            }
+
+            $ogTitle = false;
+            $ogDesc = false;
+
+            if($openGraph) {
+                foreach($openGraph as $name => $content) {
+                    $name = strtolower($name);
+                    if($name == 'title')
+                        $ogTitle = true;
+                    if($name == 'description')
+                        $ogDesc = true;
+                    $template->registerExtension(new Meta("og:$name", $content), "og:$name");
+                }
+            }
 
             if($title) {
                 $template->registerExtension(new Title($title), 'title');
-                $template->registerExtension(new Meta("og:title", $title), 'og:title');
+                if(!$ogTitle)
+                    $template->registerExtension(new Meta("og:title", $title), 'og:title');
             }
 
             if($description) {
                 $template->registerExtension(new Description($description), 'description');
-                $template->registerExtension(new Meta("og:description", $description), 'og:description');
+                if(!$ogDesc)
+                    $template->registerExtension(new Meta("og:description", $description), 'og:description');
             }
 
 
