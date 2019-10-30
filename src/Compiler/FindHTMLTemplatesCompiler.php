@@ -62,7 +62,7 @@ class FindHTMLTemplatesCompiler extends FindTemplatesCompiler
     /**
      * @inheritDoc
      */
-    protected function getTemplateFilenamePattern(): string
+    public function getTemplateFilenamePattern(): string
     {
         return "/\.layout\.phtml|\.view\.phtml|\.phtml$/i";
     }
