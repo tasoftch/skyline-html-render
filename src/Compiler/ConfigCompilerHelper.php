@@ -25,6 +25,7 @@ namespace Skyline\HTMLRender\Compiler;
 
 
 use Skyline\Component\Config\AbstractComponent;
+use Skyline\Component\Config\OpenDirectoryComponent;
 use TASoft\Config\Compiler\Factory\FactoryInterface;
 use TASoft\Config\Compiler\StandardFactoryCompiler;
 use TASoft\Config\Config;
@@ -35,13 +36,18 @@ class ConfigCompilerHelper extends StandardFactoryCompiler
     {
         $iterator = function(Config $cfg, $parentKey = NULL) use (&$iterator, $collected) {
             foreach($cfg->toArray(false) as $key => $value) {
-                if($key == AbstractComponent::COMP_REQUIREMENTS) {
+                if(is_string($key) && $key == AbstractComponent::COMP_REQUIREMENTS) {
                     $cg = $collected["@"];
                     if(!$cg)
                         $collected["@"] = $cg = new Config();
                     $cg[ $parentKey] = $value;
                 }
-                elseif($value instanceof Config)
+                elseif($value instanceof OpenDirectoryComponent) {
+                    $cg = $collected["##"];
+                    if(!$cg)
+                        $collected["##"] = $cg = new Config();
+                    $cg[ $value->getConfig()['uri'] ] = $value->getConfig()["dir"];
+                } elseif($value instanceof Config)
                     $cfg[$key] = $iterator($value, $key);
                 elseif($value instanceof FactoryInterface) {
                     $conf = $value->toConfig();
