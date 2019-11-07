@@ -41,7 +41,7 @@ use Skyline\Render\Template\Extension\ExtendableTemplateInterface;
 use Skyline\Render\Template\Extension\TemplateExtensionInterface;
 use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
 use Skyline\Render\Template\Nested\NestableTemplateInterface;
-use TASoft\EventManager\EventManagerInterface;
+use Skyline\Translation\TranslationManager;use TASoft\EventManager\EventManagerInterface;use TASoft\Service\ServiceManager;
 
 class MainLayoutPlugin implements RenderPluginInterface
 {
@@ -64,8 +64,16 @@ public function tearDown()
 
 
 public function openPage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
+    $tm = ServiceManager::generalServiceManager()->get("translationManager");
+    $language = '';
+
+    if($tm) {
+        if($tm instanceof TranslationManager) {
+            $language = $tm->getDefaultLocale()->getLanguage();
+        }
+    }
 ?><!DOCTYPE html>
-<html lang="">
+<html lang="<?=$language?>">
 <head>
     <meta name="generator" content="Skyline CMS by TASoft Applications" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
