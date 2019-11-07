@@ -64,10 +64,10 @@ public function tearDown()
 
 
 public function openPage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
-    $tm = ServiceManager::generalServiceManager()->get("translationManager");
     $language = '';
 
-    if($tm) {
+    if(ServiceManager::generalServiceManager()->serviceExists("translationManager")) {
+        $tm = ServiceManager::generalServiceManager()->get("translationManager");
         if($tm instanceof TranslationManager) {
             $language = $tm->getDefaultLocale()->getLanguage();
         }
