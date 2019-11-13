@@ -29,6 +29,7 @@
  */
 
 use PHPUnit\Framework\TestCase;
+use Skyline\HTMLRender\Template\Loader\LayoutFileLoader;
 use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
 
 class HTMLTemplatesFindCompilerTest extends TestCase
@@ -36,6 +37,83 @@ class HTMLTemplatesFindCompilerTest extends TestCase
     public function testDefaultPhtmlLoader() {
         $loader = new PhtmlFileLoader(__DIR__ . "/Examples/simple-phtml-test.phtml");
         $template = $loader->loadTemplate();
-        print_r($template);
+
+        $this->assertEquals("Meine Seite", $template->getName());
+        $this->assertEquals(["main", "content", "etwas"], $template->getTags());
+
+        $this->assertEquals("Aussagekräftiger Titel", $template->getAttribute( PhtmlFileLoader::ATTR_TITLE ));
+        $this->assertEquals("Hehe meine erste Homepage", $template->getAttribute( PhtmlFileLoader::ATTR_DESCRIPTION ));
+
+        $this->assertEquals([
+            "Application",
+            "API"
+        ], $template->getAttribute( PhtmlFileLoader::ATTR_REQUIRED_COMPONENTS ));
+
+        $this->assertEquals([
+            "jQuery"
+        ], $template->getAttribute( PhtmlFileLoader::ATTR_OPTIONAL_COMPONENTS ));
+
+        $this->assertEquals([
+            "og:uri" => 'my-test-uri@tawoft.ch'
+        ], $template->getAttribute(PhtmlFileLoader::ATTR_META));
+    }
+
+    public function testLayoutSubTemplateLoader() {
+        $loader = new LayoutFileLoader(__DIR__ . "/Examples/simple-templates.phtml");
+        $template = $loader->loadTemplate();
+
+        $templates = $template->getAttribute(LayoutFileLoader::ATTR_TEMPLATES);
+
+        $this->assertEquals([
+            "#" => "mein-template"
+        ], $templates["Navigation"]);
+
+        $this->assertEquals([
+            "name" => "test-template"
+        ], $templates["Intro"]);
+
+        $this->assertEquals([
+            "category" => "Kategorie"
+        ], $templates["Test"]);
+
+        $this->assertEquals([
+            "category" => "Kategorie",
+            "name" => 'Vorlage-Name'
+        ], $templates["Other"]);
+
+        $this->assertEquals([
+            "name" => "my-template",
+            "tags" => [
+                "tag1",
+                "tag2",
+                "tag3"
+            ]
+        ], $templates["Tagged"]);
+    }
+
+    public function testMoreComplexTemplates() {
+        $loader = new LayoutFileLoader(__DIR__ . "/Examples/complex-templates.phtml");
+        $template = $loader->loadTemplate();
+
+        $templates = $template->getAttribute(LayoutFileLoader::ATTR_TEMPLATES);
+
+        $this->assertEquals([
+            "tags" => [
+                "tag1",
+                "tag2",
+                "tag3"
+            ]
+        ], $templates["Navigation"]);
+
+        $this->assertEquals([
+            "category" => 'MyCat',
+            "tags" => [
+                "tag1",
+                "tag2",
+                "tag3"
+            ]
+        ], $templates["Cate"]);
+
+        print_r($template->getTemplate());
     }
 }

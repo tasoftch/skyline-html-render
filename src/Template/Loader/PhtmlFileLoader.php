@@ -66,14 +66,11 @@ class PhtmlFileLoader extends TemplateFileLoader
      * @return bool
      */
     protected function parseDocComment(string $docComment, MutableTemplate $template): bool {
-        $docs = explode("@", $docComment);
-        if(count($docs)>1) {
-            array_shift($docs);
-            while ($block = array_shift($docs)) {
-                if(preg_match("/^([a-z0-9_\-]+)\s+(.+)/i", $block, $ms)) {
-                    $this->mapAnnotation($ms[1], trim($ms[2]), $template);
-                }
+        if(preg_match_all("/^\s*\*\s*@([a-z0-9_\-]+)\s*(.*?)$/im", $docComment, $ms)) {
+            for($e=0;$e<count($ms[1]);$e++) {
+                $this->mapAnnotation($ms[1][$e], trim($ms[2][$e]), $template);
             }
+            return true;
         }
         return false;
     }
@@ -105,7 +102,7 @@ class PhtmlFileLoader extends TemplateFileLoader
                 $template->setAttribute(strtolower($annotationName), $annotationValue, true);
                 break;
             case 'meta':
-                if(preg_match("/^\s*([a-z\-]+)\s+(.+)$/i", $annotationValue, $ms)) {
+                if(preg_match("/^\s*([a-z\-:]+)\s+(.+)$/i", $annotationValue, $ms)) {
                     $metas = $template->getAttribute( self::ATTR_META );
                     if(!$metas)
                         $metas = [];
@@ -114,7 +111,19 @@ class PhtmlFileLoader extends TemplateFileLoader
 
                     $template->setAttribute( self::ATTR_META , $metas);
                 }
+                break;
             default:
+                $this->mapUnknownAnnotation($annotationName, $annotationValue, $template);
         }
+    }
+
+    /**
+     * Can be used by subclasses to register further annotations
+     *
+     * @param string $annotationName
+     * @param string $annotationValue
+     * @param MutableTemplate $template
+     */
+    protected function mapUnknownAnnotation(string $annotationName, string $annotationValue, MutableTemplate $template) {
     }
 }
