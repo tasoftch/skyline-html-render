@@ -105,7 +105,9 @@ public function resolveTemplateAwareChildren(string $eventName, InternRenderEven
                         $update = true;
 
                         $children[$name] = function() use ($info, $ctx) {
-                            return $ctx->findTemplate($info);
+                            if($templates = $ctx->findTemplate($info))
+                                return array_shift($templates);
+                            return NULL;
                         };
                     }
                 }
