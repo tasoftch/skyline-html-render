@@ -26,6 +26,11 @@ namespace Skyline\HTMLRender\Template\Loader;
 
 use Skyline\HTMLRender\Layout\Layout;
 use Skyline\Render\Compiler\Template\MutableTemplate;
+use Skyline\Render\Specification\Catalog;
+use Skyline\Render\Specification\Container;
+use Skyline\Render\Specification\ID;
+use Skyline\Render\Specification\Name;
+use Skyline\Render\Specification\Tag;
 use TASoft\Parser\SimpleTokenParser;
 use TASoft\Parser\Token\TokenInterface;
 use TASoft\Parser\Tokenizer\Adaptor\ExtendedNamesAdaptor;
@@ -68,9 +73,8 @@ class LayoutFileLoader extends PhtmlFileLoader
                 /** @var TokenInterface[] $tokens */
                 $tokens = $p->parseString($annotationValue);
 
-                $predefinedTemplates = $template->getAttribute( self::ATTR_TEMPLATES );
-                if(!$predefinedTemplates)
-                    $predefinedTemplates = [];
+                $predefTemplate = [];
+
                 // Annotation scheme: @template Name <definition>
                 // Where name is the called name inside a layout eg: RenderContext::renderSubTemplate('Name');
 
@@ -84,12 +88,12 @@ class LayoutFileLoader extends PhtmlFileLoader
 
                 $name = array_shift($tokens)->getContent();
 
-                $parseTags = function() use (&$tokens, &$predefinedTemplates, $name) {
+                $parseTags = function() use (&$tokens, &$predefTemplate, $name) {
                     /** @var TokenInterface[] $tokens */
                     if(($tk = reset($tokens)) && $tk->getContent() == '(') {
                         while ($next = array_shift($tokens)) {
                             if($next->getCode() == T_STRING)
-                                $predefinedTemplates[$name]["tags"][] = $next->getContent();
+                                $predefTemplate["tags"][] = $next->getContent();
                             elseif($next->getContent() == ')') {
                                 break;
                             }
@@ -104,24 +108,24 @@ class LayoutFileLoader extends PhtmlFileLoader
 
                 if($next) {
                     if($next->getCode() == T_COMMENT && $next->getContent()[0] == '#') {
-                        $predefinedTemplates[$name]["#"] = substr($next->getContent(), 1);
+                        $predefTemplate["#"] = substr($next->getContent(), 1);
                     } elseif($next->getCode() == T_STRING) {
                         // Can be name or category
                         $string = $next->getContent();
                         $next = array_shift($tokens);
                         if(!$next)
-                            $predefinedTemplates[$name]["name"] = $string;
+                            $predefTemplate["name"] = $string;
                         else {
                             if($next->getContent() == '/') {
                                 // Category
-                                $predefinedTemplates[$name]["category"] = $string;
+                                $predefTemplate["category"] = $string;
                                 $next = array_shift($tokens);
                                 if($next && $next->getCode() == T_STRING) {
-                                    $predefinedTemplates[$name]["name"] = $next->getContent();
+                                    $predefTemplate["name"] = $next->getContent();
                                 } elseif($next)
                                     array_unshift($tokens, $next);
                             } else {
-                                $predefinedTemplates[$name]["name"] = $string;
+                                $predefTemplate["name"] = $string;
                                 array_unshift($tokens, $next);
                             }
 
@@ -129,8 +133,31 @@ class LayoutFileLoader extends PhtmlFileLoader
                         }
                     }
                 }
-                $template->setAttribute(self::ATTR_TEMPLATES, $predefinedTemplates);
+
+                $this->compilePredefinedTemplate($name, $predefTemplate, $template);
             default:
+        }
+    }
+
+    protected function compilePredefinedTemplate($name, $templateInfo, MutableTemplate $template) {
+
+        if($templateInfo) {
+            $predefinedTemplates = $template->getAttribute( self::ATTR_TEMPLATES );
+
+            $predefinedTemplates[$name] = $ct = new Container();
+
+            if($c = $templateInfo["#"] ?? false)
+                $ct->append(new ID($c));
+            if($c = $templateInfo["name"] ?? false)
+                $ct->append(new Name($c));
+            if($c = $templateInfo["category"] ?? false)
+                $ct->append(new Catalog($c));
+            if($c = $templateInfo["tags"] ?? false) {
+                foreach($c as $t)
+                    $ct->append(new Tag($t));
+            }
+
+            $template->setAttribute(self::ATTR_TEMPLATES, $predefinedTemplates);
         }
     }
 }

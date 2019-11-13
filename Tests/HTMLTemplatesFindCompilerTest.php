@@ -31,6 +31,8 @@
 use PHPUnit\Framework\TestCase;
 use Skyline\HTMLRender\Template\Loader\LayoutFileLoader;
 use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
+use Skyline\Render\Compiler\Template\MutableTemplate;
+use Skyline\Render\Specification\Container;
 
 class HTMLTemplatesFindCompilerTest extends TestCase
 {
@@ -59,7 +61,7 @@ class HTMLTemplatesFindCompilerTest extends TestCase
     }
 
     public function testLayoutSubTemplateLoader() {
-        $loader = new LayoutFileLoader(__DIR__ . "/Examples/simple-templates.phtml");
+        $loader = new DebugLayoutFileLoader(__DIR__ . "/Examples/simple-templates.phtml");
         $template = $loader->loadTemplate();
 
         $templates = $template->getAttribute(LayoutFileLoader::ATTR_TEMPLATES);
@@ -89,10 +91,18 @@ class HTMLTemplatesFindCompilerTest extends TestCase
                 "tag3"
             ]
         ], $templates["Tagged"]);
+
+        $loader = new LayoutFileLoader(__DIR__ . "/Examples/simple-templates.phtml");
+        $template = $loader->loadTemplate();
+
+        $templates = $template->getAttribute(LayoutFileLoader::ATTR_TEMPLATES);
+        print_r($templates);
+
+        $this->assertInstanceOf(Container::class, $templates["Navigation"]);
     }
 
     public function testMoreComplexTemplates() {
-        $loader = new LayoutFileLoader(__DIR__ . "/Examples/complex-templates.phtml");
+        $loader = new DebugLayoutFileLoader(__DIR__ . "/Examples/complex-templates.phtml");
         $template = $loader->loadTemplate();
 
         $templates = $template->getAttribute(LayoutFileLoader::ATTR_TEMPLATES);
@@ -113,7 +123,13 @@ class HTMLTemplatesFindCompilerTest extends TestCase
                 "tag3"
             ]
         ], $templates["Cate"]);
+    }
+}
 
-        print_r($template->getTemplate());
+class DebugLayoutFileLoader extends LayoutFileLoader {
+    protected function compilePredefinedTemplate($name, $templateInfo, MutableTemplate $template) {
+        $predefinedTemplates = $template->getAttribute( self::ATTR_TEMPLATES );
+        $predefinedTemplates[$name] = $templateInfo;
+        $template->setAttribute(self::ATTR_TEMPLATES, $predefinedTemplates);
     }
 }

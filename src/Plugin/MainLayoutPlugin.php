@@ -26,22 +26,20 @@ namespace Skyline\HTMLRender\Plugin;
 
 use Skyline\HTML\Head\Description;
 use Skyline\HTML\Head\Meta;use Skyline\HTML\Head\Title;
-use Skyline\HTMLRender\Exception\ComponentNotFoundException;
 use Skyline\HTMLRender\Exception\HTMLRenderException;
 use Skyline\HTMLRender\Helper\ComponentResolverHelper;use Skyline\HTMLRender\HTMLRenderController;
 use Skyline\HTMLRender\Layout\Layout;
-use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
+use Skyline\HTMLRender\Template\Loader\LayoutFileLoader;use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
 use Skyline\Kernel\Service\SkylineServiceManager;
-use Skyline\Render\Event\InternRenderEvent;
+use Skyline\Render\Context\DefaultRenderContext;use Skyline\Render\Event\InternRenderEvent;
 use Skyline\Render\Info\RenderInfoInterface;
 use Skyline\Render\Plugin\RenderPluginInterface;
 use Skyline\Render\Plugin\RenderTemplateDispatchPlugin;
-use Skyline\Render\Template\AdvancedTemplateInterface;
 use Skyline\Render\Template\Extension\ExtendableTemplateInterface;
-use Skyline\Render\Template\Extension\TemplateExtensionInterface;
 use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
-use Skyline\Render\Template\Nested\NestableTemplateInterface;
-use Skyline\Translation\TranslationManager;use TASoft\EventManager\EventManagerInterface;use TASoft\Service\ServiceManager;
+use Skyline\Translation\TranslationManager;
+use TASoft\EventManager\EventManagerInterface;
+use TASoft\Service\ServiceManager;
 
 class MainLayoutPlugin implements RenderPluginInterface
 {
@@ -94,6 +92,30 @@ public function closePage(string $eventName, InternRenderEvent $event, $eventMan
 public function resolveTemplateAwareChildren(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
     $template = $event->getInfo()->get(RenderInfoInterface::INFO_TEMPLATE);
     $children = $event->getInfo()->get(RenderInfoInterface::INFO_SUB_TEMPLATES);
+
+    if(method_exists($template, 'getAttribute')) {
+        if($predefinedTemplates = $template->getAttribute( LayoutFileLoader::ATTR_TEMPLATES )) {
+            $update = false;
+
+            $ctx = ServiceManager::generalServiceManager()->get("renderContext");
+
+            if($ctx instanceof DefaultRenderContext) {
+                foreach($predefinedTemplates as $name => $info) {
+                    if(!isset($children[$name])) {
+                        $update = true;
+
+                        $children[$name] = function() use ($info) {
+
+                        };
+                    }
+                }
+            }
+
+
+            if($update)
+                $event->getInfo()->set( RenderInfoInterface::INFO_SUB_TEMPLATES, $children );
+        }
+    }
 
     if($template instanceof NestableAwareTemplateInterface) {
         foreach($template->getRequiredIdentifiers() as $id) {
