@@ -35,7 +35,7 @@ use Skyline\Render\Context\DefaultRenderContext;use Skyline\Render\Event\InternR
 use Skyline\Render\Info\RenderInfoInterface;
 use Skyline\Render\Plugin\RenderPluginInterface;
 use Skyline\Render\Plugin\RenderTemplateDispatchPlugin;
-use Skyline\Render\Template\Extension\ExtendableTemplateInterface;
+use Skyline\Render\Specification\Container;use Skyline\Render\Template\Extension\ExtendableTemplateInterface;
 use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
 use Skyline\Translation\TranslationManager;
 use TASoft\EventManager\EventManagerInterface;
@@ -101,11 +101,11 @@ public function resolveTemplateAwareChildren(string $eventName, InternRenderEven
 
             if($ctx instanceof DefaultRenderContext) {
                 foreach($predefinedTemplates as $name => $info) {
-                    if(!isset($children[$name])) {
+                    if(!isset($children[$name]) && $info instanceof Container) {
                         $update = true;
 
-                        $children[$name] = function() use ($info) {
-
+                        $children[$name] = function() use ($info, $ctx) {
+                            return $ctx->findTemplate($info);
                         };
                     }
                 }
