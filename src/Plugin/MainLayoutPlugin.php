@@ -25,17 +25,22 @@ namespace Skyline\HTMLRender\Plugin;
 
 
 use Skyline\HTML\Head\Description;
-use Skyline\HTML\Head\Meta;use Skyline\HTML\Head\Title;
+use Skyline\HTML\Head\Meta;
+use Skyline\HTML\Head\Title;
 use Skyline\HTMLRender\Exception\HTMLRenderException;
-use Skyline\HTMLRender\Helper\ComponentResolverHelper;use Skyline\HTMLRender\HTMLRenderController;
+use Skyline\HTMLRender\Helper\ComponentResolverHelper;
+use Skyline\HTMLRender\HTMLRenderController;
 use Skyline\HTMLRender\Layout\Layout;
-use Skyline\HTMLRender\Template\Loader\LayoutFileLoader;use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
+use Skyline\HTMLRender\Template\Loader\LayoutFileLoader;
+use Skyline\HTMLRender\Template\Loader\PhtmlFileLoader;
 use Skyline\Kernel\Service\SkylineServiceManager;
-use Skyline\Render\Context\DefaultRenderContext;use Skyline\Render\Event\InternRenderEvent;
+use Skyline\Render\Context\DefaultRenderContext;
+use Skyline\Render\Event\InternRenderEvent;
 use Skyline\Render\Info\RenderInfoInterface;
 use Skyline\Render\Plugin\RenderPluginInterface;
 use Skyline\Render\Plugin\RenderTemplateDispatchPlugin;
-use Skyline\Render\Specification\Container;use Skyline\Render\Template\Extension\ExtendableTemplateInterface;
+use Skyline\Render\Specification\Container;
+use Skyline\Render\Template\Extension\ExtendableTemplateInterface;
 use Skyline\Render\Template\Nested\NestableAwareTemplateInterface;
 use Skyline\Translation\TranslationManager;
 use TASoft\EventManager\EventManagerInterface;
@@ -62,20 +67,37 @@ public function tearDown()
 
 
 public function openPage(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
-    $language = '';
+$language = '';
 
-    if(ServiceManager::generalServiceManager()->serviceExists("translationManager")) {
-        $tm = ServiceManager::generalServiceManager()->get("translationManager");
-        if($tm instanceof TranslationManager) {
-            $language = $tm->getDefaultLocale()->getLanguage();
-        }
+if(ServiceManager::generalServiceManager()->serviceExists("translationManager")) {
+    $tm = ServiceManager::generalServiceManager()->get("translationManager");
+    if($tm instanceof TranslationManager) {
+        $language = $tm->getDefaultLocale()->getLanguage();
     }
+}
 ?><!DOCTYPE html>
 <html lang="<?=$language?>">
 <head>
+    <meta charset="UTF-8" />
     <meta name="generator" content="Skyline CMS by TASoft Applications" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <?php
+
+    if($metas = $event->getInfo()->get( RenderInfoInterface::INFO_DYNAMIC_META )) {
+        foreach ($metas as $name => $value) {
+            printf("\t<meta name=\"%s\" content=\"%s\"/>\n", htmlspecialchars($name), htmlspecialchars($value));
+        }
+    }
+
+    if($links = $event->getInfo()->get( RenderInfoInterface::INFO_DYNAMIC_LINKS )) {
+        foreach ($links as $link) {
+            $attrs = [];
+            foreach($link as $name => $value)
+                $attrs[] = sprintf("%s=\"%s\"", htmlspecialchars($name), htmlspecialchars($value));
+            echo "\t<link ", implode(" ", $attrs), "/>\n";
+        }
+    }
+
     }
 
     public function openBody(string $eventName, InternRenderEvent $event, $eventManager, ...$arguments) {
@@ -164,12 +186,16 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
                 }
             };
 
-            $openGraph = [];
-            $ogIterator = function($template) use (&$openGraph) {
+            $metaData = [];
+            $ogIterator = function($template) use (&$metaData) {
                 foreach(ComponentResolverHelper::iterateOverAttributes($template, PhtmlFileLoader::ATTR_META) as $k => $t) {
-                    $openGraph[$k] = $t;
+                    $metaData[$k] = $t;
                 }
             };
+
+            $title = $event->getInfo()->get( RenderInfoInterface::INFO_TITLE );
+            $description = $event->getInfo()->get( RenderInfoInterface::INFO_DESCRIPTION );
+
 
 
             foreach ($templateStack as $tpl) {
@@ -177,8 +203,8 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
                     $titleIterator($tpl);
                 if(!$description)
                     $descriptionIterator($tpl);
-                if(!$openGraph)
-                    $ogIterator($tpl);
+
+                $ogIterator($tpl);
             }
 
             if(!$title) {
@@ -187,21 +213,22 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
             if(!$description) {
                 $descriptionIterator($template);
             }
-            if(!$openGraph) {
-                $ogIterator($template);
-            }
+
+            $ogIterator($template);
+
+
 
             $ogTitle = false;
             $ogDesc = false;
 
-            if($openGraph) {
-                foreach($openGraph as $name => $content) {
+            if($metaData) {
+                foreach($metaData as $name => $content) {
                     $name = strtolower($name);
                     if($name == 'title')
                         $ogTitle = true;
                     if($name == 'description')
                         $ogDesc = true;
-                    $template->registerExtension(new Meta("og:$name", $content), "og:$name");
+                    $template->registerExtension(new Meta("$name", $content), "$name");
                 }
             }
 
