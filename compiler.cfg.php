@@ -31,7 +31,10 @@ return [
         AbstractExtendedCompilerFactory::COMPILER_CLASS_KEY                            => ComponentsConfigurationCompiler::class,
         ConfigurationCompiler::INFO_TARGET_FILENAME_KEY     => 'components.config.php',
         ConfigurationCompiler::INFO_PATTERN_KEY             => '/^components\.cfg\.php$/i',
-        ConfigurationCompiler::INFO_CUSTOM_FILENAME_KEY     => 'components.config.php',
+        ConfigurationCompiler::INFO_CUSTOM_FILENAME_KEY     => [
+        	'components.config.php',
+			'components.ui.config.php'
+		],
         AbstractExtendedCompilerFactory::COMPILER_DEPENDENCIES_KEY => [
             'composer-packages-order'
         ]

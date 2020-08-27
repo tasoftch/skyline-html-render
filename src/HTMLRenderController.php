@@ -31,6 +31,8 @@ use TASoft\Service\ServiceManager;
 
 class HTMLRenderController extends CompiledRenderController
 {
+	const DEFAULT_RENDER_NAME = 'html-render';
+
     private $compiledComponentsFilename;
     private $compiledComponentsInfo;
 
@@ -65,7 +67,7 @@ class HTMLRenderController extends CompiledRenderController
             $this->compiledComponentsInfo = require getcwd() . DIRECTORY_SEPARATOR . $this->getCompiledComponentsFilename();
         }
 
-        if($renderInfo = &$this->compiledComponentsInfo[ $identifier ] ?? NULL) {
+        if(isset($this->compiledComponentsInfo[ $identifier ]) && ($renderInfo = &$this->compiledComponentsInfo[ $identifier ] )) {
             $elements = [];
 
             foreach($renderInfo as $key => &$ri) {
