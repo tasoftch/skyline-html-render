@@ -64,7 +64,7 @@ class HTMLRenderController extends CompiledRenderController
      */
     public function getComponentElements(string $identifier): array {
         if(NULL === $this->compiledComponentsInfo) {
-            $this->compiledComponentsInfo = require getcwd() . DIRECTORY_SEPARATOR . $this->getCompiledComponentsFilename();
+            $this->compiledComponentsInfo = require $this->getCompiledComponentsFilename();
         }
 
         if(isset($this->compiledComponentsInfo[ $identifier ]) && ($renderInfo = &$this->compiledComponentsInfo[ $identifier ] )) {
@@ -100,7 +100,7 @@ class HTMLRenderController extends CompiledRenderController
 
     public function hasComponent(string $identifier): bool {
         if(NULL === $this->compiledComponentsInfo) {
-            $this->compiledComponentsInfo = require getcwd() . DIRECTORY_SEPARATOR . $this->getCompiledComponentsFilename();
+            $this->compiledComponentsInfo = require $this->getCompiledComponentsFilename();
         }
         return isset($this->compiledComponentsInfo[$identifier]);
     }
@@ -114,7 +114,7 @@ class HTMLRenderController extends CompiledRenderController
      */
     public function getMappedLocalFilename(string $URI, bool $prependPublicPrefix = true): ?string {
         if(NULL === $this->compiledComponentsInfo) {
-            $this->compiledComponentsInfo = require getcwd() . DIRECTORY_SEPARATOR . $this->getCompiledComponentsFilename();
+            $this->compiledComponentsInfo = require $this->getCompiledComponentsFilename();
         }
 
         if($prependPublicPrefix) {
@@ -132,7 +132,7 @@ class HTMLRenderController extends CompiledRenderController
      */
     public function getRequirementsForComponent(string $componentName): ?array {
         if(NULL === $this->compiledComponentsInfo) {
-            $this->compiledComponentsInfo = require getcwd() . DIRECTORY_SEPARATOR . $this->getCompiledComponentsFilename();
+            $this->compiledComponentsInfo = require $this->getCompiledComponentsFilename();
         }
         return $this->compiledComponentsInfo [ "@" ] [ $componentName ] ?? NULL;
     }

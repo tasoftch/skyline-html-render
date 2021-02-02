@@ -14,7 +14,7 @@
     }
   },
   "require" : {
-    "php": "^7.2",
+    "php": ">=7.2",
     "skyline/render": "^0.8",
     "skyline/html-elements": "^0.8",
     "skyline/direct-components": "^0.8",
