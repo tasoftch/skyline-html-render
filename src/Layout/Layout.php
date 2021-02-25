@@ -34,6 +34,7 @@ use Skyline\Render\Template\Extension\TemplateExtensionTrait;
 use Skyline\Render\Template\FileTemplate;
 use Skyline\Render\Template\Nested\NestableTemplateInterface;
 use Skyline\Render\Template\Nested\TemplateNestingTrait;
+use TASoft\Util\PathTool;
 
 /**
  * The abstrat layout defines
@@ -79,7 +80,10 @@ class Layout extends FileTemplate implements ExtendableAwareTemplateInterface, N
             }
             unset($self);
 
-            require $FILE;
+			if(PathTool::isZeroPath( $FILE ))
+				require $FILE;
+			else
+				require SkyGetRoot() . $FILE;
         };
     }
 
