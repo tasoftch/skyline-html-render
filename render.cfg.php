@@ -24,6 +24,7 @@
 use Skyline\HTMLRender\Plugin\MainLayoutPlugin;
 use Skyline\Render\CompiledRender;
 use Skyline\Render\Plugin\RenderTemplateDefaultDispatchPlugin;
+use Skyline\Render\Plugin\RenderTemplateDispatchPlugin;
 
 return [
     'html-render' => [
@@ -36,5 +37,16 @@ return [
                 CompiledRender::CONFIG_PLUGIN_CLASS => MainLayoutPlugin::class
             ]
         ]
-    ]
+    ],
+	'html-head-render' => [
+		CompiledRender::CONFIG_RENDER_CLASS => CompiledRender::class,
+		CompiledRender::CONFIG_PLUGINS => [
+			[
+				CompiledRender::CONFIG_PLUGIN_CLASS => RenderTemplateDispatchPlugin::class,
+			],
+			[
+				CompiledRender::CONFIG_PLUGIN_CLASS => MainLayoutPlugin::class
+			]
+		]
+	]
 ];
