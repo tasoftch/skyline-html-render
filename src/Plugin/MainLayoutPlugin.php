@@ -85,7 +85,7 @@ if(ServiceManager::generalServiceManager()->serviceExists("translationManager"))
 
     if($metas = $event->getInfo()->get( RenderInfoInterface::INFO_DYNAMIC_META )) {
         foreach ($metas as $name => $value) {
-            printf("\t<meta property=\"%s\" name=\"%s\" content=\"%s\"/>\n", htmlspecialchars($name), htmlspecialchars($name), htmlspecialchars($value));
+            printf("\t<meta property=\"%s\" content=\"%s\"/>\n", htmlspecialchars($name), htmlspecialchars($value));
         }
     }
 
