@@ -85,7 +85,7 @@ if(ServiceManager::generalServiceManager()->serviceExists("translationManager"))
 
     if($metas = $event->getInfo()->get( RenderInfoInterface::INFO_DYNAMIC_META )) {
         foreach ($metas as $name => $value) {
-            printf("\t<meta name=\"%s\" content=\"%s\"/>\n", htmlspecialchars($name), htmlspecialchars($value));
+            printf("\t<meta property=\"%s\" name=\"%s\" content=\"%s\"/>\n", htmlspecialchars($name), htmlspecialchars($value), htmlspecialchars($value));
         }
     }
 
@@ -235,13 +235,13 @@ public function collectHTMLComponents(string $eventName, InternRenderEvent $even
             if($title) {
                 $template->registerExtension(new Title($title), 'title');
                 if(!$ogTitle)
-                    $template->registerExtension(new Meta("og:title", $title), 'og:title');
+                    $template->registerExtension(new Meta("og:title", $title, true), 'og:title');
             }
 
             if($description) {
                 $template->registerExtension(new Description($description), 'description');
                 if(!$ogDesc)
-                    $template->registerExtension(new Meta("og:description", $description), 'og:description');
+                    $template->registerExtension(new Meta("og:description", $description, true), 'og:description');
             }
 
 
