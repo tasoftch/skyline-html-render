@@ -14,15 +14,15 @@
     }
   },
   "require" : {
-    "php": ">=7.2",
-    "skyline/render": "^0.8",
-    "skyline/html-elements": "^0.8",
+    "php": "^8",
+    "skyline/render": "^8",
+    "skyline/html-elements": "^8",
     "skyline/direct-components": "^0.8",
     "tasoft/php-string-parser": "^0.9"
   },
   "require-dev": {
-    "phpunit/phpunit": "^6",
-    "skyline/compiler": "^0.8",
+    "phpunit/phpunit": "^9",
+    "skyline/compiler": "^8",
     "skyline/direct-components-forwarding": "^0.8",
     "skyline/translation": "^0.8"
   }
