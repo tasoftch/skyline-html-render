@@ -24,6 +24,6 @@
     "phpunit/phpunit": "^9",
     "skyline/compiler": "^8",
     "skyline/direct-components-forwarding": "^8",
-    "skyline/translation": "^0.8"
+    "skyline/translation": "^8"
   }
 }
